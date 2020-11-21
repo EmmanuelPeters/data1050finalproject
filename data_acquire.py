@@ -8,7 +8,9 @@ import json
 
 # To set your enviornment variables in your terminal run the following line:
 # export 'BEARER_TOKEN'='<your_bearer_token>'
+# Or directly input your bear token here
 
+BEARER_TOKEN = "AAAAAAAAAAAAAAAAAAAAAAvXJwEAAAAAIcXaFn0%2BJTvnohILXLyQ9Dv5YTQ%3D9fJq0CoqICLCNSfyKEkDxDf4JbXlS0bTCY4MSackOwr71G33s4"
 
 def create_headers(bearer_token):
     headers = {"Authorization": "Bearer {}".format(bearer_token)}
@@ -84,7 +86,8 @@ def get_stream(headers, set, bearer_token):
 
 
 def main():
-    bearer_token = os.environ.get("BEARER_TOKEN")
+    # bearer_token = os.environ.get("BEARER_TOKEN")
+    bearer_token = BEARER_TOKEN
     headers = create_headers(bearer_token)
     rules = get_rules(headers, bearer_token)
     delete = delete_all_rules(headers, bearer_token, rules)
