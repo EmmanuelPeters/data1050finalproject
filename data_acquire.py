@@ -1,7 +1,8 @@
 """This module downloads data from Twitter and save it to MongoDB database"""
 # How to filter tweets: https://developer.twitter.com/en/docs/tutorials/building-high-quality-filters
 # How to connect to filtered stream endpoint: https://developer.twitter.com/en/docs/tutorials/listen-for-important-events
-
+import time
+import sched
 import requests
 import os
 import json
@@ -11,13 +12,22 @@ import json
 # Or directly input your bear token here
 
 BEARER_TOKEN = "AAAAAAAAAAAAAAAAAAAAAAvXJwEAAAAAIcXaFn0%2BJTvnohILXLyQ9Dv5YTQ%3D9fJq0CoqICLCNSfyKEkDxDf4JbXlS0bTCY4MSackOwr71G33s4"
+DOWNLOAD_PERIOD = 1   # seconds
+KEYWORDS = ['happy', 'sad']
+TOP_WORDS = ['like', 'hate', 'i', 'to', 'a', '\"and\"', 'is', 'in', 'it', 'you', 'of', 'for', 'on', 'my',
+             'at', 'that', 'with', 'me', 'do', 'have', 'just', 'this', 'be', 'so', 'are',
+             'can', 'the']
+
+SAMPLE_RULES = [
+        {"value": "(" + " OR ".join(TOP_WORDS) + ")" + " -is:retweet -is:reply -is:quote lang:en"}
+    ]
 
 def create_headers(bearer_token):
     headers = {"Authorization": "Bearer {}".format(bearer_token)}
     return headers
 
 
-def get_rules(headers, bearer_token):
+def get_rules(headers):
     response = requests.get(
         "https://api.twitter.com/2/tweets/search/stream/rules", headers=headers
     )
@@ -29,7 +39,7 @@ def get_rules(headers, bearer_token):
     return response.json()
 
 
-def delete_all_rules(headers, bearer_token, rules):
+def delete_all_rules(headers, rules):
     if rules is None or "data" not in rules:
         return None
 
@@ -49,12 +59,8 @@ def delete_all_rules(headers, bearer_token, rules):
     print(json.dumps(response.json()))
 
 
-def set_rules(headers, delete, bearer_token):
-    # You can adjust the rules if needed
-    sample_rules = [
-        {"value": "dog has:images", "tag": "dog pictures"},
-        {"value": "cat has:images -grumpy", "tag": "cat pictures"},
-    ]
+def set_rules(headers):
+    sample_rules = SAMPLE_RULES
     payload = {"add": sample_rules}
     response = requests.post(
         "https://api.twitter.com/2/tweets/search/stream/rules",
@@ -68,7 +74,7 @@ def set_rules(headers, delete, bearer_token):
     print(json.dumps(response.json()))
 
 
-def get_stream(headers, set, bearer_token):
+def get_stream(headers):
     response = requests.get(
         "https://api.twitter.com/2/tweets/search/stream", headers=headers, stream=True,
     )
@@ -79,21 +85,46 @@ def get_stream(headers, set, bearer_token):
                 response.status_code, response.text
             )
         )
-    for response_line in response.iter_lines():
-        if response_line:
-            json_response = json.loads(response_line)
-            print(json.dumps(json_response, indent=4, sort_keys=True))
+    return response.iter_lines()
+    # for response_line in response.iter_lines():
+        # if response_line:
+            # json_response = json.loads(response_line)
+            # print(len(json.dumps(json_response, indent=4, sort_keys=True)))
 
-
-def main():
+def update_once(keywords=KEYWORDS):
+    kw_freq = {kw: 0 for kw in keywords}
+    headers = create_headers(BEARER_TOKEN)
+    stream = get_stream(headers)
+    i = 0
+    while i < 10000:
+        tweet = next(stream)
+        if tweet:
+            i += 1
+            words = [word.lower() for word in json.loads(tweet)['data']['text'].split()]
+            for word in words:
+                if word in kw_freq:
+                    kw_freq[word] += 1
+    print(kw_freq)
+    
+def main_loop(timeout=DOWNLOAD_PERIOD):
     # bearer_token = os.environ.get("BEARER_TOKEN")
     bearer_token = BEARER_TOKEN
     headers = create_headers(bearer_token)
-    rules = get_rules(headers, bearer_token)
-    delete = delete_all_rules(headers, bearer_token, rules)
-    set = set_rules(headers, delete, bearer_token)
-    get_stream(headers, set, bearer_token)
+    rules = get_rules(headers)
+    delete_all_rules(headers, rules)
+    set_rules(headers)
+    scheduler = sched.scheduler(time.time, time.sleep)
 
+    def _worker():
+        try:
+            update_once()
+        except Exception as e:
+            print(e)
+            # logger.warning("main loop worker ignores exception and continues: {}".format(e))
+        scheduler.enter(timeout, 1, _worker)    # schedule the next event
 
+    scheduler.enter(0, 1, _worker)              # start the first event
+    scheduler.run(blocking=True)
+    
 if __name__ == "__main__":
-    main()
+    main_loop()
