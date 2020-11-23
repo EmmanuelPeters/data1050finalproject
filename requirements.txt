@@ -1,0 +1,7 @@
+dash
+matplotlib
+plotly
+numpy
+pymongo
+requests
+expiringdict

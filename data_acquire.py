@@ -6,6 +6,7 @@ import sched
 import requests
 import os
 import json
+from database import upsert
 
 # To set your enviornment variables in your terminal run the following line:
 # export 'BEARER_TOKEN'='<your_bearer_token>'
@@ -17,10 +18,10 @@ KEYWORDS = ['happy', 'sad']
 TOP_WORDS = ['like', 'hate', 'i', 'to', 'a', '\"and\"', 'is', 'in', 'it', 'you', 'of', 'for', 'on', 'my',
              'at', 'that', 'with', 'me', 'do', 'have', 'just', 'this', 'be', 'so', 'are',
              'can', 'the']
-
 SAMPLE_RULES = [
         {"value": "(" + " OR ".join(TOP_WORDS) + ")" + " -is:retweet -is:reply -is:quote lang:en"}
     ]
+
 
 def create_headers(bearer_token):
     headers = {"Authorization": "Bearer {}".format(bearer_token)}
@@ -86,17 +87,20 @@ def get_stream(headers):
             )
         )
     return response.iter_lines()
-    # for response_line in response.iter_lines():
-        # if response_line:
-            # json_response = json.loads(response_line)
-            # print(len(json.dumps(json_response, indent=4, sort_keys=True)))
+
+
+def ymdhms(delimiter='-'):
+    t = time.localtime()
+    t = [str(i) for i in t[:6]]
+    return delimiter.join(t)
+
 
 def update_once(keywords=KEYWORDS):
     kw_freq = {kw: 0 for kw in keywords}
     headers = create_headers(BEARER_TOKEN)
     stream = get_stream(headers)
     i = 0
-    while i < 10000:
+    while i < 1000:
         tweet = next(stream)
         if tweet:
             i += 1
@@ -104,8 +108,10 @@ def update_once(keywords=KEYWORDS):
             for word in words:
                 if word in kw_freq:
                     kw_freq[word] += 1
-    print(kw_freq)
-    
+    kw_freq['timestamp'] = ymdhms()
+    upsert(kw_freq)
+
+
 def main_loop(timeout=DOWNLOAD_PERIOD):
     # bearer_token = os.environ.get("BEARER_TOKEN")
     bearer_token = BEARER_TOKEN
@@ -125,6 +131,7 @@ def main_loop(timeout=DOWNLOAD_PERIOD):
 
     scheduler.enter(0, 1, _worker)              # start the first event
     scheduler.run(blocking=True)
-    
+
+
 if __name__ == "__main__":
     main_loop()
