@@ -12,7 +12,7 @@ from database import upsert
 # export 'BEARER_TOKEN'='<your_bearer_token>'
 # Or directly input your bear token here
 
-BEARER_TOKEN = "AAAAAAAAAAAAAAAAAAAAAAvXJwEAAAAAIcXaFn0%2BJTvnohILXLyQ9Dv5YTQ%3D9fJq0CoqICLCNSfyKEkDxDf4JbXlS0bTCY4MSackOwr71G33s4"
+BEARER_TOKEN = ""
 DOWNLOAD_PERIOD = 1   # seconds
 KEYWORDS = ['happy', 'sad']
 TOP_WORDS = ['like', 'hate', 'i', 'to', 'a', '\"and\"', 'is', 'in', 'it', 'you', 'of', 'for', 'on', 'my',

@@ -7,8 +7,7 @@ from expiringdict import ExpiringDict
 from utils import setup_logger
 
 
-
-client = pymongo.MongoClient("mongodb+srv://baijiuyang:data1050@cluster0.xercm.mongodb.net/<dbname>?retryWrites=true&w=majority")
+client = pymongo.MongoClient()
 logger = logging.Logger(__name__)
 setup_logger(logger, 'db.log')
 RESULT_CACHE_EXPIRATION = 200             # seconds
