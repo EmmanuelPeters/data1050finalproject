@@ -5,3 +5,5 @@ numpy
 pymongo
 requests
 expiringdict
+scipy
+wordcloud
