@@ -42,6 +42,7 @@ def preprocess_text(text):
     new_text = [item for sublist in new_text for item in sublist]
     return np.unique(new_text)
 
+
 def test_processing_basic():
     assert preprocess_text("These are some sample sentences. Watch out!") == ['sampl', 'sentenc',
                                                                            'watch']
@@ -51,8 +52,4 @@ def test_processing_basic():
                                                                                                        'pajama',
                                                                                                        'pleas',
                                                                                                        'short']
-    corpus, links = build_corpus('MiniWiki.xml')
-    titles = [t for t, _ in corpus]
-    assert sorted(titles) == ['Title 1', 'Title 2']
-    assert links == {'Title 1': {'Title 2'}, 'Title 2': {'Title 1'}}
 
