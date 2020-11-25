@@ -103,21 +103,25 @@ def get_filtered_stream(headers):
         )
     return response.iter_lines()
 
+
 def get_sample_stream(headers):
-    response = requests.get(
-        "https://api.twitter.com/2/tweets/sample/stream" + 
-        "?tweet.fields=created_at,geo,lang,public_metrics", 
-        headers=headers,
-        stream=True,
-    )
-    print(response.status_code)
-    if response.status_code != 200:
-        raise Exception(
-            "Request returned an error: {} {}".format(
-                response.status_code, response.text
-            )
+    while True:
+        response = requests.get(
+            "https://api.twitter.com/2/tweets/sample/stream" + 
+            "?tweet.fields=created_at,geo,lang,public_metrics", 
+            headers=headers,
+            stream=True
         )
-    return response.iter_lines()
+        print(response.status_code)
+        if response.status_code == 200:
+            return response.iter_lines()
+        else:
+            print("Request returned an error: {} {}".format(
+                    response.status_code, response.text
+                    )
+            )
+            time.sleep(3)
+    
 
 
 def ymdhms(delimiter='-'):
@@ -164,27 +168,34 @@ def get_sample_batch(stream, batch_size=100):
     insert_data(tweets, 'tweets', many=True)
 
 def main_loop():
+    '''
+    Thread One: Computes the frequency of "happy" and "sad" in 1000 English tweets
+    then saves the frequency to the "keywords_frequencies" collection in our MongoDB Atlas database.
+
+    Thread Two : Saves English tweets to the "tweets" collection in our MongoDB Atlas database. 
+    Each tweet is a dictionary with public metrics (number of retweet, likes, etc), lang (language),
+    geo (user tagged location), and text and tokenized text.
+    '''
     headers = create_headers(BEARER_TOKEN) 
-    sample_stream1 = get_sample_stream(headers)
-    sample_stream2 = get_sample_stream(headers)
+    sample_stream = get_sample_stream(headers)
 
     def _worker1():
         while True:
             try:
-                get_freq_batch(sample_stream1)
+                get_freq_batch(sample_stream)
             except Exception as e:
                 print(e)
                 # logger.warning("_worker1 ignores exception and continues: {}".format(e))
-            time.sleep(1)
+            time.sleep(3)
             
     def _worker2():
         while True:
             try:
-                get_sample_batch(sample_stream2)
+                get_sample_batch(sample_stream)
             except Exception as e:
                 print(e)
                 # logger.warning("_worker2 ignores exception and continues: {}".format(e))
-            time.sleep(1)
+            time.sleep(3)
 
     # Run two workers in two async threads
     Thread(target=_worker1).start()
