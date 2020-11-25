@@ -11,8 +11,9 @@ import sched
 import requests
 import os
 import json
-
-from database import upsert
+from threading import Thread
+from database import insert_data
+from preprocess import preprocess_text
 
 
 # To set your enviornment variables in your terminal run the following line:
@@ -44,7 +45,6 @@ def get_rules(headers):
         raise Exception(
             "Cannot get rules (HTTP {}): {}".format(response.status_code, response.text)
         )
-    print(json.dumps(response.json()))
     return response.json()
 
 
@@ -66,7 +66,6 @@ def delete_all_rules(headers, rules):
                 response.status_code, response.text
             )
         )
-    print(json.dumps(response.json()))
 
 
 def set_rules(headers):
@@ -85,8 +84,13 @@ def set_rules(headers):
     print(json.dumps(response.json()))
 
 
-def get_stream(headers):
+def get_filtered_stream(headers):
     '''Connect to a filtered stream. Returns an iterable object x. next(x) return a tweet.'''
+    # Clear the old rules
+    rules = get_rules(headers)
+    delete_all_rules(headers, rules)
+    # Set the new rules
+    set_rules(headers)
     response = requests.get(
         "https://api.twitter.com/2/tweets/search/stream", headers=headers, stream=True,
     )
@@ -94,6 +98,22 @@ def get_stream(headers):
     if response.status_code != 200:
         raise Exception(
             "Cannot get stream (HTTP {}): {}".format(
+                response.status_code, response.text
+            )
+        )
+    return response.iter_lines()
+
+def get_sample_stream(headers):
+    response = requests.get(
+        "https://api.twitter.com/2/tweets/sample/stream" + 
+        "?tweet.fields=created_at,geo,lang,public_metrics", 
+        headers=headers,
+        stream=True,
+    )
+    print(response.status_code)
+    if response.status_code != 200:
+        raise Exception(
+            "Request returned an error: {} {}".format(
                 response.status_code, response.text
             )
         )
@@ -107,53 +127,68 @@ def ymdhms(delimiter='-'):
     return delimiter.join(t)
 
 
-def get_freq_batch(keywords=KEYWORDS):
+def get_freq_batch(stream, keywords=KEYWORDS, batch_size=1000):
     '''
     Find the frequency of keywords in 1000 tweets. Creates a dictionary {'kw1': freq, 'kw2':freq,...}
     and insert the dictionary to MongoDB database.
     '''
     kw_freq = {kw: 0 for kw in keywords}
-    headers = create_headers(BEARER_TOKEN)
-    # Clear the old rules
-    rules = get_rules(headers)
-    delete_all_rules(headers, rules)
-    # Set the new rules
-    set_rules(headers)
-    # Connect to the filtered stream
-    stream = get_stream(headers)
     i = 0
-    while i < 1000:
+    while i < batch_size:
         tweet = next(stream)
         if tweet:
-            i += 1
-            words = [word.lower() for word in json.loads(tweet)['data']['text'].split()]
-            for word in words:
-                if word in kw_freq:
-                    kw_freq[word] += 1
+            tweet = json.loads(tweet)
+            if tweet['data']['lang'] == 'en':
+                i += 1
+                words = [word.lower() for word in tweet['data']['text'].split()]
+                for word in words:
+                    if word in kw_freq:
+                        kw_freq[word] += 1
     kw_freq['timestamp'] = ymdhms()
-    # upsert(kw_freq)
+    insert_data(kw_freq, 'keywords_frequencies', many=False)
 
 
-def get_sample_batch():
+def get_sample_batch(stream, batch_size=100):
     '''Get a batch of sample tweets with number of retweets and likes'''
-    pass
+    i = 0
+    tweets = []
+    while i < batch_size:
+        tweet = next(stream)
+        if tweet:
+            tweet = json.loads(tweet)
+            if tweet['data']['lang'] == 'en':
+                i += 1
+                tweet['timestamp'] = ymdhms()
+                tweet['data']['text_tokenized'] = preprocess_text(tweet['data']['text'])
+                tweets.append(tweet)
+    insert_data(tweets, 'tweets', many=True)
 
+def main_loop():
+    headers = create_headers(BEARER_TOKEN) 
+    sample_stream1 = get_sample_stream(headers)
+    sample_stream2 = get_sample_stream(headers)
 
-def main_loop(timeout=1):
-    # A scheduler object is used to call _worker() repeatedly
-    scheduler = sched.scheduler(time.time, time.sleep)
+    def _worker1():
+        while True:
+            try:
+                get_freq_batch(sample_stream1)
+            except Exception as e:
+                print(e)
+                # logger.warning("_worker1 ignores exception and continues: {}".format(e))
+            time.sleep(1)
+            
+    def _worker2():
+        while True:
+            try:
+                get_sample_batch(sample_stream2)
+            except Exception as e:
+                print(e)
+                # logger.warning("_worker2 ignores exception and continues: {}".format(e))
+            time.sleep(1)
 
-    def _worker():
-        try:
-            get_freq_batch()
-        except Exception as e:
-            print(e)
-            # logger.warning("main loop worker ignores exception and continues: {}".format(e))
-        scheduler.enter(timeout, 1, _worker)    # schedule the next event
-
-    scheduler.enter(0, 1, _worker)              # start the first event
-    scheduler.run(blocking=True)
-
+    # Run two workers in two async threads
+    Thread(target=_worker1).start()
+    Thread(target=_worker2).start()
 
 if __name__ == "__main__":
     main_loop()
