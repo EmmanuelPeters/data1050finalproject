@@ -7,3 +7,4 @@ requests
 expiringdict
 scipy
 wordcloud
+scikit-image
