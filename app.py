@@ -3,6 +3,7 @@
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
+import dash.dependencies import Input, Output
 import numpy as np
 import plotly.express as px
 from os import path
@@ -19,10 +20,11 @@ COLORS = ['rgb(255, 255, 255)', 'rgb(29, 161, 242)', 'rgb(27, 40, 54)', 'rgb(255
 
 
 # Define DASH app
-
+app = dash.Dash(__name__)
 
 
 # Define componet functions.
+
 
 def page_header():
     '''
@@ -38,6 +40,8 @@ def page_header():
 
 # Primary text area.
 
+               
+               
 def description():
     '''
     Project description is returned in markdown
@@ -50,7 +54,31 @@ def description():
         for decision making. Tweeter is a very good place to learn about people’s preferences 
         because it has a huge amount of users and each user’s tweet will reflect what they like and don’t like
         ''',)
-
+# Allowed input types for site user limited to text and numbers only.                              
+ALLOWED_TYPES = (
+    "text", "number",
+    
+)
+                              
+# DASH function for user input.                              
+app.layout = html.Div(
+    [
+        dcc.Input(
+            id="input_{}.format(_),
+            type=_,
+            placeholder="input type {}".format(_),
+        )
+        for _ in ALLOWED_TYPES
+    ]
+    + [html.Div(id="out-all-types)]
+               )
+       
+@app.callback(
+    Output("out-all-types", "children",
+    [Input("input_{}".format(_), "value") for _ in ALLOWED_TYPES],
+          )
+    
+       
 # Generate word cloud visualiation
 def generate_word_cloud(text):
     # read the mask image
