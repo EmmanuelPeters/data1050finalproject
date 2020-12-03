@@ -17,7 +17,7 @@ from skimage import io
 
 # Definitions of page style constants. Any external CSS stylesheets can go here as well.
 COLORS = ['rgb(255, 255, 255)', 'rgb(29, 161, 242)', 'rgb(27, 40, 54)', 'rgb(255, 255, 54)']
-
+external_stylesheets = ['/assets/style.css']
 
 # Define DASH app
 app = dash.Dash(__name__)
