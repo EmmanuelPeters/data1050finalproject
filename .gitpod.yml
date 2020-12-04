@@ -1,6 +1,6 @@
 # Command to start on workspace startup (optional)
 tasks:
-  - init: python3 install -r requirements.txt 
+  - init: pip3 install -r requirements.txt 
     command: python3 app.py
 # Ports to expose on workspace startup (optional)
 ports:
