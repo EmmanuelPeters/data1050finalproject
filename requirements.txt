@@ -8,3 +8,4 @@ expiringdict
 scipy
 wordcloud
 scikit-image
+pandas
