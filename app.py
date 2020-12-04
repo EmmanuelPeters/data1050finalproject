@@ -3,7 +3,7 @@
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
-import dash.dependencies import Input, Output
+from dash.dependencies import Input, Output
 import numpy as np
 import plotly.express as px
 from os import path
@@ -13,6 +13,8 @@ import os
 from scipy.ndimage import gaussian_gradient_magnitude
 from wordcloud import WordCloud, STOPWORDS
 from skimage import io
+from generate_word_cloud import generate_word_cloud
+from predict_percent_visualization import percentage_visualization
 
 
 # Definitions of page style constants. Any external CSS stylesheets can go here as well.
@@ -30,55 +32,44 @@ def page_header():
     '''
     The page header is returned as a DASH 'html.div'
     '''
-    
-    return html.Div(id='header', children = [
-        html.Div([html, H4('Tweet Storm')],
-                 
-        html.A([html.Img(id='twitter_logo', src=app.get_asset_url('twitter_logo.png'),
-                         style={'height': '35px', 'paddingTop': '10%'})],
-               
+    return html.Div(id='header',
+                    children=[html.Div([html.H3('Visualization with datashader and Plotly')], className="ten columns"),
+                              html.A([html.Img(id='logo',
+                                            src=app.get_asset_url('twitter_logo.png'),
+                                            style={'height': '35px', 'paddingTop': '10%'})],
+                                            className="two columns row",
+                                            href='https://github.com/EmmanuelPeters/data1050finalproject')
+                             ], 
+                    className="row")        
 
 # Primary text area.
-
-               
-               
 def description():
     '''
     Project description is returned in markdown
     '''
-               
     return html.Div(children=[dcc.Markdown('''
         # Tweet Storm
         Capturing the “taste” of the population has both scientific and commercial value. Knowing what idea 
         or product will be popular in the future can give people important information 
         for decision making. Tweeter is a very good place to learn about people’s preferences 
         because it has a huge amount of users and each user’s tweet will reflect what they like and don’t like
-        ''',)
+        ''', className='eleven columns', style={'paddingLeft': '5%'})], className="row")
+
 # Allowed input types for site user limited to text and numbers only.                              
-ALLOWED_TYPES = (
-    "text", "number",
-    
-)
+ALLOWED_TYPES = ("text", "number")
                               
-# DASH function for user input.                              
-app.layout = html.Div(
-    [
-        dcc.Input(
-            id="input_{}.format(_),
-            type=_,
-            placeholder="input type {}".format(_),
-        )
-        for _ in ALLOWED_TYPES
-    ]
-    + [html.Div(id="out-all-types)]
-               )
-       
-@app.callback(
-    Output("out-all-types", "children",
-    [Input("input_{}".format(_), "value") for _ in ALLOWED_TYPES],
-          )
-    
-       
+# DASH function for user input.
+app.layout = html.Div([html.H6("Enter your Tweet!"),
+                       html.Div(["Input: ", dcc.Input(id='keyword', value='input keyword', type='text')]),
+                       html.Br(), html.Div(id='text')])
+
+
+
+# @app.callback(Output(component_id='text', component_property='children'),
+#               Input(component_id='keyword', component_property='value'))
+
+
+
 # Generate word cloud visualiation
 def generate_word_cloud(text):
     # read the mask image
@@ -127,3 +118,6 @@ def percentage_visualization(perc):
     fig = px.bar(x = x_list, y = likelihood, animation_frame=increase_list, range_y = [0, 100]) 
     
     return fig
+
+if __name__ == '__main__':
+    app.run_server(debug=True, port=1050, host='0.0.0.0')
