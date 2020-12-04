@@ -1,14 +1,8 @@
-image: gitpod/workspace-mongodb
-ports:
-  - port: 5000
-  - port: 8080
-  - port: 27017
-  - port: 8888
-  - port: 1050
+# Command to start on workspace startup (optional)
 tasks:
-  - command: cp -r .jupyter /home/gitpod/
-  - command: mongod
-  - command: pip3 install -r requirements.txt && (python3 app.py)
-vscode:
-  extensions:
-    - ms-python.python@2019.9.34911:NHtRMp5fFB2KUUw72DlGug==
+  - init: python3 install -r requirements.txt 
+    command: python3 app.py
+# Ports to expose on workspace startup (optional)
+ports:
+  - port: 1050
+    onOpen: open-preview
