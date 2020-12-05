@@ -40,7 +40,7 @@ def preprocess_text(text):
         temp = [stemmer.stem(word.lower()) for word in temp if word.isalnum() and word.lower() not in english_stop_words]
         new_text.append(temp)
     new_text = [item for sublist in new_text for item in sublist]
-    return np.unique(new_text)
+    return np.unique(new_text).tolist()
 
 
 def test_processing_basic():
