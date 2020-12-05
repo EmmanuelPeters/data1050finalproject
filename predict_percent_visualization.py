@@ -19,5 +19,7 @@ def percentage_visualization(perc):
     
     return fig
 
-fig = percentage_visualization(87.6)
-fig.show()
+
+if __name__ == '__main__':
+    fig = percentage_visualization(87.6)
+    fig.show()

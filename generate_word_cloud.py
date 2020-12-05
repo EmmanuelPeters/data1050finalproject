@@ -39,6 +39,8 @@ def generate_word_cloud(text):
     fig.update_xaxes(visible=False)
     
     return fig
-    
-fig = generate_word_cloud(text)
-fig.show()
+
+
+if __name__ == '__main__':
+    fig = generate_word_cloud(text)
+    fig.show()
