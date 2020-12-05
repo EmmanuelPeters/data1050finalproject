@@ -30,7 +30,7 @@ def percentage_visualization(perc):
 def generate_word_cloud(text): 
     # read the mask image
     d = path.dirname(__file__) if "__file__" in locals() else os.getcwd()
-    twitter_image = np.array(Image.open(path.join(d, "twitter_mask.png")))
+    twitter_image = np.array(Image.open(path.join(d, "assets", "twitter_mask.png")))
 
     # create mask  white is "masked out"
     twitter_mask = twitter_image.copy()
