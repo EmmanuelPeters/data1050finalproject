@@ -15,12 +15,13 @@ from threading import Thread, Lock
 from database import insert_data
 from preprocess import preprocess_text
 from threadsafe_iter import Threadsafe_iter
+from utils import ymdhms
 
 
 # To set your enviornment variables in your terminal run the following line:
 # export 'BEARER_TOKEN'='<your_bearer_token>'
 BEARER_TOKEN = os.environ.get('BEARER_TOKEN')
-KEYWORDS = ['happy', 'sad']
+KEYWORDS = ['happy', 'sad', 'snow', 'gift']
 # Key words for filter
 TOP_WORDS = ['like', 'hate', 'i', 'to', 'a', '\"and\"', 'is', 'in', 'it', 'you', 'of', 'for', 'on', 'my',
              'at', 'that', 'with', 'me', 'do', 'have', 'just', 'this', 'be', 'so', 'are',
@@ -122,23 +123,16 @@ def get_sample_stream(headers):
                     )
             )
             time.sleep(3)
-    
 
 
-def ymdhms(delimiter='-'):
-    '''Generate a time stamp with the formate yyyy-mm-dd-hh-mm-ss'''
-    t = time.localtime()
-    t = [str(i) for i in t[:6]]
-    return delimiter.join(t)
-
-
-def get_freq_batch(stream, keywords=KEYWORDS, batch_size=1000):
+def read_stream(stream, keywords=KEYWORDS, batch_size=1000):
     '''
     Find the frequency of keywords in 1000 tweets. Creates a dictionary {'kw1': freq, 'kw2':freq,...}
-    and insert the dictionary to MongoDB database.
+    and tokenize the text and insert the dictionary to MongoDB databases.
     '''
     kw_freq = {kw: 0 for kw in keywords}
     i = 0
+    tweets = []
     while i < batch_size:
         tweet = next(stream)
         if tweet:
@@ -149,26 +143,14 @@ def get_freq_batch(stream, keywords=KEYWORDS, batch_size=1000):
                 for word in words:
                     if word in kw_freq:
                         kw_freq[word] += 1
-                print(f"get_freq_batch {i}/{batch_size}")
-    kw_freq['timestamp'] = ymdhms()
-    insert_data(kw_freq, 'keywords_frequencies', many=False)
-
-
-def get_sample_batch(stream, batch_size=100):
-    '''Get a batch of sample tweets with number of retweets and likes'''
-    i = 0
-    tweets = []
-    while i < batch_size:
-        tweet = next(stream)
-        if tweet:
-            tweet = json.loads(tweet)
-            if tweet['data']['lang'] == 'en':
-                i += 1
                 tweet['timestamp'] = ymdhms()
                 tweet['data']['text_tokenized'] = preprocess_text(tweet['data']['text'])
                 tweets.append(tweet)
-                print(f"get_sample_batch {i}/{batch_size}")
+                # print(f"read_stream {i}/{batch_size}")
+    kw_freq['timestamp'] = ymdhms()
+    insert_data(kw_freq, 'keywords_frequencies', many=False)
     insert_data(tweets, 'tweets', many=True)
+    
 
 def main_loop():
     '''
@@ -183,28 +165,14 @@ def main_loop():
     sample_stream = get_sample_stream(headers)
     # Make it thread safe
     sample_stream = Threadsafe_iter(sample_stream)
-
-    def _worker1():
-        while True:
-            try:
-                get_freq_batch(sample_stream)
-            except Exception as e:
-                print(e)
-                # logger.warning("_worker1 ignores exception and continues: {}".format(e))
-            time.sleep(3)
-            
-    def _worker2():
-        while True:
-            try:
-                get_sample_batch(sample_stream)
-            except Exception as e:
-                print(e)
-                # logger.warning("_worker2 ignores exception and continues: {}".format(e))
-            time.sleep(3)
-
-    # Run two workers in two async threads
-    Thread(target=_worker1).start()
-    Thread(target=_worker2).start()
+    while True:
+        try:
+            read_stream(sample_stream)
+        except Exception as e:
+            print(e)
+            # logger.warning("_worker1 ignores exception and continues: {}".format(e))
+        time.sleep(1)
+         
 
 if __name__ == "__main__":
     main_loop()
