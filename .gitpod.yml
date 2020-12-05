@@ -5,4 +5,5 @@ tasks:
 # Ports to expose on workspace startup (optional)
 ports:
   - port: 1050
+  - port: 27017
     onOpen: open-preview

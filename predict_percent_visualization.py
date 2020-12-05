@@ -1,6 +1,7 @@
 import plotly.express as px
 import numpy as np
 
+# Generate a small animation based on the prediction result `perc`
 # The detailed layout should be tuned based on the choose DASH app
 def percentage_visualization(perc):
     '''the `perc` is the result of previous likelihood prediction based on user's input Tweets'''
