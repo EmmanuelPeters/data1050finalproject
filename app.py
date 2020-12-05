@@ -56,14 +56,23 @@ def description():
         ''', className='eleven columns', style={'paddingLeft': '5%'})], className="row")
 
 # Allowed input types for site user limited to text and numbers only.                              
-ALLOWED_TYPES = ("text", "number")
+# ALLOWED_TYPES = ("text", "number")
                               
 # DASH function for user input.
-app.layout = html.Div([html.H6("Enter your Tweet!"),
-                       html.Div(["Input: ", dcc.Input(id='keyword', value='input keyword', type='text')]),
-                       html.Br(), html.Div(id='text')])
+# app.layout = html.Div([html.H6("Enter your Tweet!"),
+#                        html.Div(["Input: ", dcc.Input(id='keyword', value='input keyword', type='text')]),
+#                        html.Br(), html.Div(id='text')])
 
+# Sequentially add page components to the app's layout
+def dynamic_layout():
+    return html.Div([
+        page_header(),
+        html.Hr(),
+        description(),
+    ], className='row', id='content')
 
+# set layout to a function which updates upon reloading
+app.layout = dynamic_layout
 
 # @app.callback(Output(component_id='text', component_property='children'),
 #               Input(component_id='keyword', component_property='value'))
