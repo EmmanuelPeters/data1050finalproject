@@ -7,7 +7,6 @@ get_sample_batch and get_freq_batch will be called
 # How to connect to sample stream endpoint:
 # How to lookup a tweet: 
 import time
-import sched
 import requests
 import os
 import json
