@@ -11,10 +11,8 @@ import sched
 import requests
 import os
 import json
-from threading import Thread, Lock
 from database import insert_data
 from preprocess import preprocess_text
-from threadsafe_iter import Threadsafe_iter
 from utils import ymdhms
 
 
@@ -153,18 +151,8 @@ def read_stream(stream, keywords=KEYWORDS, batch_size=1000):
     
 
 def main_loop():
-    '''
-    Thread One: Computes the frequency of "happy" and "sad" in 1000 English tweets
-    then saves the frequency to the "keywords_frequencies" collection in our MongoDB Atlas database.
-
-    Thread Two : Saves English tweets to the "tweets" collection in our MongoDB Atlas database. 
-    Each tweet is a dictionary with public metrics (number of retweet, likes, etc), lang (language),
-    geo (user tagged location), and text and tokenized text.
-    '''
     headers = create_headers(BEARER_TOKEN) 
     sample_stream = get_sample_stream(headers)
-    # Make it thread safe
-    sample_stream = Threadsafe_iter(sample_stream)
     while True:
         try:
             read_stream(sample_stream)
