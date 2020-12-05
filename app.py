@@ -4,17 +4,7 @@ import dash
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
-import numpy as np
-import plotly.express as px
-from os import path
-from PIL import Image
-import numpy as np
-import os
-from scipy.ndimage import gaussian_gradient_magnitude
-from wordcloud import WordCloud, STOPWORDS
-from skimage import io
-from generate_word_cloud import generate_word_cloud
-from predict_percent_visualization import percentage_visualization
+from visualization import generate_word_cloud, percentage_visualization
 
 
 # Definitions of page style constants. Any external CSS stylesheets can go here as well.
