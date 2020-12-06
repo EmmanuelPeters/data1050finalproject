@@ -83,6 +83,13 @@ def fetch_all_as_time_series(allow_cached=False):
             kw_freq[k]['frequencies'].append(f)
     return kw_freq
 
+def fetch_all_as_text(allow_cached=False):
+    """
+    Fetch all data from database for 'text' input into
+    wordcloud visualization
+    """
+    text = fetch_all("tweets", allow_cached)
+    return text
 
 if __name__ == "__main__":
     print(fetch_all_as_time_series(allow_cached=True))

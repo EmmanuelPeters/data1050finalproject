@@ -57,7 +57,7 @@ def dynamic_layout():
                     html.Hr(),
                     description(),
                     dcc.Graph(figure=keywords_frequencies_graph()),
-                    #dcc.Graph(figure=generate_word_cloud()), 
+                    dcc.Graph(figure=generate_word_cloud()), 
                     ],
                     className='row', id='content')
 

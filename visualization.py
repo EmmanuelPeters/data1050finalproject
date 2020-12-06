@@ -6,7 +6,7 @@ from scipy.ndimage import gaussian_gradient_magnitude
 from wordcloud import WordCloud, STOPWORDS
 from plotly import express as px, graph_objects as go
 from skimage import io
-from database import fetch_all_as_time_series
+from database import fetch_all_as_time_series, fetch_all_as_text
 COLORS = ['rgb(50, 255, 50)', 'rgb(29, 161, 242)', 'rgb(230, 230, 230)', 'rgb(255, 255, 54)']
 
 
