@@ -9,3 +9,5 @@ scipy
 wordcloud
 scikit-image
 pandas
+pytest
+nltk
