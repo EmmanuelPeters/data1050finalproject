@@ -57,8 +57,11 @@ def dynamic_layout():
                     html.Hr(),
                     description(),
                     dcc.Graph(figure=keywords_frequencies_graph()),
+                    dcc.Graph(figure=generate_word_cloud()), 
                     ],
                     className='row', id='content')
+
+
 
 # set layout to a function which updates upon reloading
 app.layout = dynamic_layout
