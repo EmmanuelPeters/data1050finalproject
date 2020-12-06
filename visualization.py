@@ -56,9 +56,8 @@ def keywords_frequencies_graph(stack=False):
     Returns scatter line plot the frequencies of all keywords.
     If `stack` is `True`, all frequencies are stacked together.
     """
-    kw_freq = fetch_all_as_time_series(allow_cached=True)
+    kw_freq = fetch_all_as_time_series(allow_cached=False)
     if kw_freq is None:
-        print('kw_freq is None')
         return go.Figure()
     keywords = list(kw_freq.keys())
     fig = go.Figure()
