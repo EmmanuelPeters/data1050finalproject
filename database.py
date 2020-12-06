@@ -3,6 +3,7 @@
 import os
 import logging
 import pymongo
+from collections import defaultdict
 # ExpriringDict works as a cache. See https://www.pluralsight.com/guides/explore-python-libraries:-in-memory-caching-using-expiring-dict
 from expiringdict import ExpiringDict
 from utils import setup_logger, ymdhms
@@ -11,9 +12,10 @@ from utils import setup_logger, ymdhms
 client = pymongo.MongoClient(os.environ.get("MONGO"))
 logger = logging.Logger(__name__)
 setup_logger(logger, 'db.log')
-RESULT_CACHE_EXPIRATION = 200             # seconds
+RESULT_CACHE_EXPIRATION = 60             # seconds
 # Set up time limited cache for data fetching from MongoDB database
 _fetch_all_cache = ExpiringDict(max_len=1, max_age_seconds=RESULT_CACHE_EXPIRATION)
+
 
 def insert_data(data, collec, many):
     """
@@ -27,7 +29,6 @@ def insert_data(data, collec, many):
     else:
         collection.insert_one(data)
         logger.info(f"{ymdhms()} inserted data {data} to {collec} collection")
-    
 
 
 def fetch_all_from_db(collec):
@@ -39,6 +40,7 @@ def fetch_all_from_db(collec):
     ret = list(collection.find())
     logger.info(str(len(ret)) + ' documents read from the db')
     return ret
+
 
 def fetch_all(collec, allow_cached=False):
     """
@@ -61,6 +63,26 @@ def fetch_all(collec, allow_cached=False):
     _fetch_all_cache[collec] = ret
     return ret
 
+
+def fetch_all_as_time_series(allow_cached=False):
+    """
+    Fetch all data from database and convert to time series for plot.
+    """
+    data = fetch_all("keywords_frequencies", allow_cached)
+    kw_freq = {}
+    for d in data:
+        if 'timestamp' not in d:
+            continue
+        t = d['timestamp']
+        d.pop('timestamp', None)
+        d.pop('_id', None)
+        for k, f in d.items():
+            if k not in kw_freq:
+                kw_freq[k] = defaultdict(list)
+            kw_freq[k]['timestamps'].append(t)
+            kw_freq[k]['frequencies'].append(f)
+    return kw_freq
+
+
 if __name__ == "__main__":
-    print(fetch_all("keywords_frequencies"))
-    print(fetch_all("tweets"))
+    print(fetch_all_as_time_series(allow_cached=True))
