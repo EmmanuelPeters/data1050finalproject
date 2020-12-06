@@ -28,7 +28,7 @@ def percentage_visualization(perc):
     return fig
 
 
-def generate_word_cloud(text): 
+def generate_word_cloud(): 
     # read the mask image
     d = path.dirname(__file__) if "__file__" in locals() else os.getcwd()
     twitter_image = np.array(Image.open(path.join(d, "assets", "twitter_mask.png")))
