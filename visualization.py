@@ -44,6 +44,7 @@ def generate_word_cloud():
     wc = WordCloud(background_color="white", max_words=2000, mask=twitter_mask,
                stopwords=stopwords, contour_width=3, contour_color='steelblue')
     # generate word cloud
+    text = fetch_all_as_text(allow_cached=False)
     twitter_wc = wc.generate(text)
     fig = px.imshow(twitter_wc)
     fig.update_yaxes(visible=False)
