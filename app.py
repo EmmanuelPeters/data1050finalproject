@@ -1,10 +1,9 @@
 '''This Module contains the web application'''
-
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
-from visualization import generate_word_cloud, percentage_visualization
+from visualization import generate_word_cloud, percentage_visualization, keywords_frequencies_graph
 
 
 # Definitions of page style constants. Any external CSS stylesheets can go here as well.
@@ -54,11 +53,12 @@ def description():
 
 # Sequentially add page components to the app's layout
 def dynamic_layout():
-    return html.Div([
-        page_header(),
-        html.Hr(),
-        description(),
-    ], className='row', id='content')
+    return html.Div([page_header(),
+                    html.Hr(),
+                    description(),
+                    dcc.Graph(figure=keywords_frequencies_graph()),
+                    ],
+                    className='row', id='content')
 
 # set layout to a function which updates upon reloading
 app.layout = dynamic_layout
