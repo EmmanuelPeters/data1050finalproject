@@ -51,7 +51,7 @@ def generate_word_cloud(text):
     return fig
     
     
-def static_stacked_trend_graph(stack=False):
+def keywords_frequencies_graph(stack=False):
     """
     Returns scatter line plot the frequencies of all keywords.
     If `stack` is `True`, all frequencies are stacked together.
