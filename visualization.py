@@ -58,6 +58,7 @@ def keywords_frequencies_graph(stack=False):
     """
     kw_freq = fetch_all_as_time_series(allow_cached=True)
     if kw_freq is None:
+        print('kw_freq is None')
         return go.Figure()
     keywords = list(kw_freq.keys())
     fig = go.Figure()
@@ -79,5 +80,5 @@ def keywords_frequencies_graph(stack=False):
     
     
 if __name__ == '__main__':
-    fig = static_stacked_trend_graph()
+    fig = keywords_frequencies_graph()
     fig.show()
